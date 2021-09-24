@@ -1,5 +1,6 @@
 ﻿#define CRT_SECURE_NO_WARNINGS
 #include <bangtal>
+#include <time.h>
 using namespace bangtal;
 
 #include <cstdlib>
@@ -14,9 +15,13 @@ ObjectPtr start;
 //timer이용해서 섞기
 TimerPtr timer;
 float animationTime = 0.05f;
-int mixCount = 200;
+int mixCount = 5;
 
 int blank;
+
+clock_t start_t, end_t;
+
+
 
 int game_index(ObjectPtr piece) {
 	for (int i = 0; i < 16; i++)
@@ -51,14 +56,9 @@ bool check_move(int index) {
 	//index가 blank 오른쪽 == blank +1
 	if (blank % 4 < 3 && index == blank + 1) return true;
 	//index가 blank 위 == blank -4
-	if (blank % 4 > 0 && index == blank - 4) return true;
+	if (index == blank + 4) return true;
 	//index가 blank 아래 == blank +4
-	if (blank % 4 < 3 && index == blank + 4) return true;
-
-	//blank가 제일 왼쪽 자리에 있을 때 blank%4 == 0
-	//blank가 제일 오른쪽 자리에 있을 때 blank%4 == 3
-	//blank가 제일 위쪽 자리에 있을 때 blank%4 == 0
-	//blank가 제일 아래쪽 자리에 있을 때 blank%4 == 3
+	if (index == blank - 4) return true;
 
 	return false;
 }
@@ -73,7 +73,7 @@ int random_move() {
 
 //start 버튼을 누르면 timer를 시작
 void start_game() {
-	mixCount = 200;
+	mixCount = 5;
 
 	timer->set(animationTime);
 	timer->start();
@@ -95,7 +95,18 @@ bool check_end() {
 void end_game() {
 	game_board[blank]->show();
 	start->show();
-	showMessage("Completed!!!");
+
+}
+
+void watch() {
+	end_t = clock();
+	double result;
+	char buf[32];
+
+	result = (double)(end_t - start_t);
+
+	sprintf_s(buf, "Took %.2f seconds!!", (result) / CLOCKS_PER_SEC);
+	showMessage(buf);
 }
 
 void init_game(){
@@ -112,6 +123,7 @@ void init_game(){
 				game_move(index);
 
 				if (check_end()) {
+					watch();
 					end_game();
 				}
 			}
@@ -125,6 +137,7 @@ void init_game(){
 	//start버튼을 누르면 임의의 방향으로 blank가 움직임
 	start->setOnMouseCallback([&](auto object, auto x, auto y, auto action)->bool {
 		start_game();
+		start_t = clock();
 
 		return true;
 		});
